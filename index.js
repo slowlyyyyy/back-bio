@@ -35,6 +35,8 @@ app.get('/sales/history', async (req, res) => {
   const { transaction_status } = req.query;
   const { BASIC_AUTH } = process.env;
 
+  console.log(BASIC_AUTH)
+
   try {
     // Primeiro obtemos o token
     const tokenResponse = await axios.post(
@@ -49,13 +51,20 @@ app.get('/sales/history', async (req, res) => {
     );
 
     const accessToken = tokenResponse.data.access_token;
+    const agora = new Date();
+    const seisMesesAtras = new Date();
+    seisMesesAtras.setMonth(agora.getMonth() - 6);
+
+    const data = seisMesesAtras.getTime(); // em milissegundos
+    console.log(seisMesesAtras); // timestamp
 
     // Agora fazemos a requisição para o histórico de vendas
     const salesResponse = await axios.get(
       `https://developers.hotmart.com/payments/api/v1/sales/history`,
       {
         params: {
-          transaction_status: transaction_status || 'APPROVED'
+          start_date: data,
+          end_date: new Date().getTime()
         },
         headers: {
           'Content-Type': 'application/json',
