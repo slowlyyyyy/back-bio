@@ -2,12 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const connection = require('./Data/db'); // arquivo que exporta a conexão mysql
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Endpoint para obter o token de acesso
 app.post('/token', async (req, res) => {
   const { BASIC_AUTH } = process.env;
 
@@ -30,13 +30,11 @@ app.post('/token', async (req, res) => {
   }
 });
 
-// Novo endpoint para obter o histórico de vendas
 app.get('/sales/history', async (req, res) => {
   const { transaction_status } = req.query;
   const { BASIC_AUTH } = process.env;
 
   try {
-    // Primeiro obtemos o token
     const tokenResponse = await axios.post(
       'https://api-sec-vlc.hotmart.com/security/oauth/token?grant_type=client_credentials',
       {},
@@ -50,12 +48,19 @@ app.get('/sales/history', async (req, res) => {
 
     const accessToken = tokenResponse.data.access_token;
 
-    // Agora fazemos a requisição para o histórico de vendas
+    const agora = new Date();
+    const seisMesesAtras = new Date();
+    seisMesesAtras.setMonth(agora.getMonth() - 6);
+
+    const data = seisMesesAtras.getTime(); // em milissegundos
+
+
     const salesResponse = await axios.get(
       `https://developers.hotmart.com/payments/api/v1/sales/history`,
       {
         params: {
-          transaction_status: transaction_status || 'APPROVED'
+          start_date: data,
+          end_date: new Date().getTime()
         },
         headers: {
           'Content-Type': 'application/json',
@@ -70,6 +75,26 @@ app.get('/sales/history', async (req, res) => {
     res.status(500).json({ error: 'Erro ao obter histórico de vendas' });
   }
 });
+
+app.post('/questionario', async (req, res) => {
+  const respostas = req.body;
+
+  try {
+    const campos = Object.keys(respostas).map(chave => `${chave}`).join(', ');
+    const valores = Object.values(respostas);
+    const placeholders = valores.map(() => '?').join(', ');
+
+    const sql = `INSERT INTO questionario (${campos}) VALUES (${placeholders})`;
+    const [result] = await connection.execute(sql, valores);
+
+    res.status(201).json({ message: 'Respostas registradas com sucesso', id: result.insertId });
+  } catch (error) {
+    console.error('Erro ao salvar questionário:', error);
+    res.status(500).json({ error: 'Erro ao salvar questionário' });
+  }
+});
+
+
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
