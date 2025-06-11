@@ -34,6 +34,8 @@ app.get('/sales/history', async (req, res) => {
   const { transaction_status } = req.query;
   const { BASIC_AUTH } = process.env;
 
+  console.log(BASIC_AUTH)
+
   try {
     const tokenResponse = await axios.post(
       'https://api-sec-vlc.hotmart.com/security/oauth/token?grant_type=client_credentials',
@@ -47,6 +49,12 @@ app.get('/sales/history', async (req, res) => {
     );
 
     const accessToken = tokenResponse.data.access_token;
+    const agora = new Date();
+    const seisMesesAtras = new Date();
+    seisMesesAtras.setMonth(agora.getMonth() - 6);
+
+    const data = seisMesesAtras.getTime(); // em milissegundos
+    console.log(seisMesesAtras); // timestamp
 
     const agora = new Date();
     const seisMesesAtras = new Date();
