@@ -56,12 +56,6 @@ app.get('/sales/history', async (req, res) => {
     const data = seisMesesAtras.getTime(); // em milissegundos
     console.log(seisMesesAtras); // timestamp
 
-    const agora = new Date();
-    const seisMesesAtras = new Date();
-    seisMesesAtras.setMonth(agora.getMonth() - 6);
-
-    const data = seisMesesAtras.getTime(); // em milissegundos
-
 
     const salesResponse = await axios.get(
       `https://developers.hotmart.com/payments/api/v1/sales/history`,
@@ -100,6 +94,49 @@ app.post('/questionario', async (req, res) => {
     console.error('Erro ao salvar questionário:', error);
     res.status(500).json({ error: 'Erro ao salvar questionário' });
   }
+});
+
+app.post('/email', async (req, res) => {
+  const email = req.body.email;
+
+  console.log('Recebido:', email);
+
+  try {
+    const sql = 'INSERT INTO emails (email) VALUES (?)';
+    const [result] = await connection.execute(sql, [email]);
+
+    res.status(201).json({ message: 'Email salvo com sucesso', id: result.insertId });
+  } catch (error) {
+    console.error('Erro ao salvar email:', error);
+    res.status(500).json({ error: 'Erro ao salvar email' });
+  }
+});
+
+app.get('/email', async (req, res) => {
+
+  try {
+    const sql = `SELECT * FROM EMAILS`;
+    const [result] = await connection.execute(sql);
+
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('Erro ao salvar email:', error);
+    res.status(500).json({ error: 'Erro ao salvar email' });
+  }
+});
+
+app.get('/questionario', async (req, res) => {
+  
+  try{
+    const sql = `SELECT * FROM questionario`;
+    const [result] = await connection.execute(sql);
+
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('Erro ao salvar questionário:', error);
+    res.status(500).json({ error: 'Erro ao salvar questionário' });
+  }
+
 });
 
 
