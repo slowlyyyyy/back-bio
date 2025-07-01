@@ -30,6 +30,18 @@ app.post('/token', async (req, res) => {
   }
 });
 
+
+app.get('/', async (req, res) => {
+
+  try {
+
+    res.status(201).json('Teste');
+  } catch (error) {
+    console.error('Erro ao salvar email:', error);
+    res.status(500).json({ error: 'Erro ao salvar email' });
+  }
+});
+
 app.get('/sales/history', async (req, res) => {
   const { transaction_status } = req.query;
   const { BASIC_AUTH } = process.env;
