@@ -90,6 +90,64 @@ app.get('/sales/history', async (req, res) => {
   }
 });
 
+app.post('/sales/history', async (req, res) => {
+  const respostas = req.body.email;
+  const { BASIC_AUTH } = process.env;
+
+  console.log(BASIC_AUTH)
+
+  try {
+    const tokenResponse = await axios.post(
+      'https://api-sec-vlc.hotmart.com/security/oauth/token?grant_type=client_credentials',
+      {},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': BASIC_AUTH,
+        }
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+    const agora = new Date();
+    const seisMesesAtras = new Date();
+    seisMesesAtras.setMonth(agora.getMonth() - 6);
+
+    const data = seisMesesAtras.getTime(); // em milissegundos
+    console.log(seisMesesAtras); // timestamp
+
+
+    const salesResponse = await axios.get(
+      `https://developers.hotmart.com/payments/api/v1/sales/history`,
+      {
+        params: {
+          start_date: data,
+          end_date: new Date().getTime()
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    const emailBuscado = respostas; // Ex: "ccrauth@gmail.com"
+    const vendas = salesResponse.data.items;
+
+    const emailExiste = vendas.some(item => item.buyer.email === emailBuscado);
+
+    if (emailExiste) {
+      res.json({ exists: true });
+    } else {
+      res.json({ exists: false });
+    }
+
+  } catch (error) {
+    console.error('Erro ao buscar histórico de vendas:', error.message);
+    res.status(500).json({ error: 'Erro ao obter histórico de vendas' });
+  }
+});
+
 app.post('/questionario', async (req, res) => {
   const respostas = req.body;
 
